@@ -1,0 +1,76 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Login extends CI_Controller {
+
+	/**
+	 * Index Page for this controller.
+	 *
+	 * Maps to the following URL
+	 * 		http://example.com/index.php/welcome
+	 *	- or -  
+	 * 		http://example.com/index.php/welcome/index
+	 *	- or -
+	 * Since this controller is set as the default controller in 
+	 * config/routes.php, it's displayed at http://example.com/
+	 *
+	 * So any other public methods not prefixed with an underscore will
+	 * map to /index.php/welcome/<method_name>
+	 * @see http://codeigniter.com/user_guide/general/urls.html
+	 */
+	public function index()
+	{
+		$data['error'] = '';
+ 		$this->load->view('CS Portal/index',$data);		
+	}
+	public function signup(){
+		$requested_username = $this->input->post('signup_username');
+		$data['error'] = '';
+		//$this->load->view('test',$data);
+		$this->load->library('email');
+		$this->load->model('Signup');
+		$is_already_registered = $this->Signup->already_member($requested_username);
+		if($is_already_registered){
+			$create_member = $this->Signup->create_member($requested_username);
+			if($create_member){
+				$data['error'] = 'Successfully Signed Up. Check your mail for your password.';
+				$this->load->view('CS Portal/index',$data);
+			}
+			else{
+				$data['error'] = 'Some connection error';
+				$this->load->view('CS Portal/index',$data);
+			}
+		}
+		else {
+			$data['error'] = 'Already Registered';
+			$this->load->view('CS Portal/index',$data);
+		}
+	}
+	public function signin(){
+		$user = $this->input->post('signin_username');
+		$pass = $this->input->post('signin_password');
+		$user = $this->db->escape_str($user);
+		$pass = $this->db->escape_str($pass);
+		$this->load->model('Signin');
+		$is_registered = $this->Signin->is_registered($user);
+		if($is_registered){
+			$is_pass_correct = $this->Signin->let_me_login($user,$pass);
+			if($is_pass_correct){
+				redirect('/home', 'refresh');
+				//$this->load->library('../controllers/home');
+				//$this->load->library('home.php');
+				//$this->load->view('CS Portal/profile');
+			}
+			else {
+				$data['error'] = 'Incorrect Password';
+				$this->load->view('CS Portal/index',$data);
+			}
+		}
+		else{
+			$data['error'] = 'Please register first.';
+			$this->load->view('CS Portal/index',$data);
+		}
+	}
+}
+
+/* End of file welcome.php */
+/* Location: ./application/controllers/welcome.php */
